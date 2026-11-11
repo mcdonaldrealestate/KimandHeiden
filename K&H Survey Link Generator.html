@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey Email Generator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #ecd4ca;
+}
+
+h1 {
+    color: #000;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input,
+select {
+    display: block;
+    width: 100%;
+    background-color: #fff;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+#survey_type {
+    width: 50%;
+}
+
+.hidden {
+    display: none;
+}
+
+button {
+    background: #ef492f;
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 25px;
+    font-size: 16px;
+    width: 100%;
+}
+
+button:disabled {
+    opacity: 0.5;
+}
+
+#status {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    display: none;
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+
+    body {
+        margin: 10px auto;
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+
+    #survey_type {
+        width: 100%;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<h1>Survey Email Generator</h1>
+
+<label for="survey_type">Survey Type</label>
+<select id="survey_type">
+    <option value="pre">Pre Appraisal</option>
+    <option value="lost">Lost Listing</option>
+</select>
+
+<label for="email">Email Address</label>
+<input type="email" id="email" required>
+
+<label for="first_name">First Name</label>
+<input type="text" id="first_name" required>
+
+<label for="last_name">Last Name</label>
+<input type="text" id="last_name" required>
+
+<div id="appraisalRow">
+
+    <label for="appraisal_datetime">
+        Appraisal Date / Time
+    </label>
+
+    <input
+        type="text"
+        id="appraisal_datetime">
+
+</div>
+
+<label for="property_address">Property Address</label>
+<input type="text" id="property_address" required>
+
+<label for="subject">Email Subject</label>
+<input
+    type="text"
+    id="subject"
+    value="Getting Ready For Your Appraisal">
+
+<button type="button" id="copyButton" onclick="createEmail()">
+    Copy & Create Email
+</button>
+
+<div id="status" aria-live="polite"></div>
+
+<script>
+
+function escapeHtml(value) {
+    return value.replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[char]);
+}
+
+document.getElementById('survey_type').addEventListener('change', function () {
+
+    const subjectField =
+        document.getElementById('subject');
+
+    const appraisalRow =
+        document.getElementById('appraisalRow');
+
+    if (this.value === 'lost') {
+
+        subjectField.value =
+            'Could you please provide some feedback?';
+
+        appraisalRow.classList.add('hidden');
+
+    } else {
+
+        subjectField.value =
+            'Getting Ready For Your Appraisal';
+
+        appraisalRow.classList.remove('hidden');
+
+    }
+
+});
+
+function buildEmail() {
+
+    const email =
+        document.getElementById('email').value.trim();
+
+    const firstName =
+        document.getElementById('first_name').value.trim();
+
+    const lastName =
+        document.getElementById('last_name').value.trim();
+
+    const appraisalDateTime =
+        document.getElementById('appraisal_datetime').value.trim();
+
+    const propertyAddress =
+        document.getElementById('property_address').value.trim();
+
+    const surveyType =
+        document.getElementById('survey_type').value;
+
+    const subject =
+        document.getElementById('subject').value.trim();
+
+    if (
+        !email ||
+        !firstName ||
+        !lastName ||
+        !propertyAddress ||
+        !subject
+    ) {
+        alert("Please complete all fields.");
+        return null;
+    }
+
+    if (
+        surveyType === "pre" &&
+        !appraisalDateTime
+    ) {
+        alert("Please enter the appraisal date and time.");
+        return null;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert("Please enter a valid email address.");
+        return null;
+    }
+
+    let surveyUrl;
+
+    if (surveyType === "lost") {
+
+        surveyUrl =
+            "https://sprw.io/stt-klsIO"
+            + "?first_name=" + encodeURIComponent(firstName)
+            + "&last_name=" + encodeURIComponent(lastName)
+            + "&email_address=" + encodeURIComponent(email)
+            + "&property_address=" + encodeURIComponent(propertyAddress)
+            + "&subject=" + encodeURIComponent(subject);
+
+    } else {
+
+        surveyUrl =
+            "https://sprw.io/stt-5v5cu"
+            + "?first_name=" + encodeURIComponent(firstName)
+            + "&last_name=" + encodeURIComponent(lastName)
+            + "&email_address=" + encodeURIComponent(email)
+            + "&property_address=" + encodeURIComponent(propertyAddress)
+            + "&appraisal_datetime=" + encodeURIComponent(appraisalDateTime)
+            + "&subject=" + encodeURIComponent(subject);
+
+    }
+
+    let html;
+    let plain;
+
+    if (surveyType === "lost") {
+
+        html = `
+		
+		<div style="background:#ffffff;color:#000000;font-family:Arial,sans-serif;">
+		
+<p>Hi ${escapeHtml(firstName)},</p>
+
+<p>
+Congratulations on getting your property on the market, we wish you a total home run with the sale.
+</p>
+
+<p>
+Since our team is always looking to sharpen our game, we'd love your honest feedback.
+If you have 30 seconds, could you please answer a couple of questions for us?
+</p>
+
+<p>
+<a href="${surveyUrl}">
+<strong>Give Feedback</strong>
+</a>
+</p>
+`;
+
+        plain = `Hi ${firstName},
+
+Congratulations on getting your property on the market, we wish you a total home run with the sale.
+
+Since our team is always looking to sharpen our game, we'd love your honest feedback.
+If you have 30 seconds, could you please answer a couple of questions for us?
+
+Give Feedback:
+${surveyUrl}`;
+
+    } else {
+
+        html = `
+		<div style="background:#ffffff;color:#000000;font-family:Arial,sans-serif;">
+		
+<p>Hi ${escapeHtml(firstName)},</p>
+
+<p>
+We're super excited to drop by on
+<strong>${escapeHtml(appraisalDateTime)}</strong>
+and check out
+<strong>${escapeHtml(propertyAddress)}</strong>!
+</p>
+
+<p>
+To help us bring our A-game and craft a game plan that actually fits you personally,
+could you take 60 seconds to answer a few quick questions below?
+</p>
+
+<p>
+<a href="${surveyUrl}">
+<strong>Answer Questions</strong>
+</a>
+</p>
+`;
+
+        plain = `Hi ${firstName},
+
+We're super excited to drop by on ${appraisalDateTime} and check out ${propertyAddress}!
+
+To help us bring our A-game and craft a game plan that actually fits you personally,
+could you take 60 seconds to answer a few quick questions below?
+
+Answer Questions:
+${surveyUrl}`;
+
+    }
+
+    return {
+        email,
+        subject,
+        html,
+        plain
+    };
+
+}
+
+async function copyHtml(html, plain) {
+
+    if (
+        navigator.clipboard &&
+        navigator.clipboard.write &&
+        typeof ClipboardItem !== "undefined"
+    ) {
+
+        try {
+
+            const item = new ClipboardItem({
+                "text/html": new Blob([html], {
+                    type: "text/html"
+                }),
+                "text/plain": new Blob([plain], {
+                    type: "text/plain"
+                })
+            });
+
+            await navigator.clipboard.write([item]);
+
+            return true;
+
+        } catch (err) {
+
+            console.log(err);
+
+        }
+
+    }
+
+    try {
+
+        const temp = document.createElement('div');
+
+        temp.innerHTML = html;
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+
+        document.body.appendChild(temp);
+
+        const range = document.createRange();
+        range.selectNodeContents(temp);
+
+        const selection = window.getSelection();
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        const copied =
+            document.execCommand('copy');
+
+        selection.removeAllRanges();
+
+        document.body.removeChild(temp);
+
+        return copied;
+
+    } catch (err) {
+
+        return false;
+
+    }
+
+}
+
+async function createEmail() {
+
+    const data = buildEmail();
+
+    if (!data) return;
+
+    const status =
+        document.getElementById('status');
+
+    const button =
+        document.getElementById('copyButton');
+
+    status.style.display = 'block';
+
+    button.disabled = true;
+    button.textContent = 'Preparing Email...';
+
+    const success =
+        await copyHtml(data.html, data.plain);
+
+    button.disabled = false;
+    button.textContent = 'Copy & Create Email';
+
+    if (success) {
+
+        status.innerHTML = `
+            <strong>Email copied successfully!</strong><br><br>
+            Your email application is opening.<br>
+            Click in the email body and paste.
+        `;
+
+        window.location.href =
+            "mailto:" + encodeURIComponent(data.email)
+            + "?subject="
+            + encodeURIComponent(data.subject);
+
+    } else {
+
+        status.innerHTML = `
+            <strong>Automatic copying is not supported.</strong><br><br>
+            Please try opening this file in Chrome or Safari.
+        `;
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
